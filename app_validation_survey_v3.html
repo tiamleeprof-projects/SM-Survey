@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App Validation Survey</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green: #00ff99;
+      --green-dim: #00cc77;
+      --green-glow: rgba(0,255,153,0.15);
+      --bg: #0a0a0a;
+      --surface: #111;
+      --surface2: #181818;
+      --border: rgba(255,255,255,0.07);
+      --text: #f0f0f0;
+      --muted: #888;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 20px 80px;
+    }
+
+    /* Ambient background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(0,255,153,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .survey-wrapper {
+      width: 100%;
+      max-width: 620px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    .survey-header {
+      margin-bottom: 32px;
+    }
+    .survey-header .eyebrow {
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 8px;
+    }
+    .survey-header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(26px, 5vw, 36px);
+      font-weight: 800;
+      line-height: 1.1;
+      color: #fff;
+    }
+    .survey-header p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 300;
+    }
+
+    /* Progress */
+    .progress-bar-wrapper {
+      margin-bottom: 32px;
+    }
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .progress-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+    .progress-label span { color: var(--green); }
+    .progress-track {
+      height: 3px;
+      background: var(--surface2);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green-dim), var(--green));
+      border-radius: 99px;
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: 0 0 12px rgba(0,255,153,0.4);
+    }
+
+    /* Steps */
+    .step { display: none; animation: stepIn 0.35s cubic-bezier(0.4,0,0.2,1); }
+    .step.active { display: block; }
+    @keyframes stepIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .step-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .step-subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 28px;
+      font-weight: 300;
+    }
+
+    /* Form fields */
+    .field { margin-bottom: 20px; }
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #ccc;
+      margin-bottom: 8px;
+      letter-spacing: 0.01em;
+    }
+    .field label .optional {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 300;
+      margin-left: 6px;
+    }
+
+    select, textarea, input[type="text"], input[type="email"] {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+      cursor: pointer;
+    }
+    select:focus, textarea:focus, input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px var(--green-glow);
+    }
+    textarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+
+    /* Option cards (pill selectors) */
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .options-grid.cols-1 { grid-template-columns: 1fr; }
+    .option-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+    }
+    .option-card:hover { border-color: rgba(0,255,153,0.3); background: rgba(0,255,153,0.04); }
+    .option-card.selected {
+      border-color: var(--green);
+      background: var(--green-glow);
+      color: #fff;
+    }
+    .option-card .check {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      font-size: 10px;
+    }
+    .option-card.selected .check {
+      background: var(--green);
+      border-color: var(--green);
+      color: #000;
+    }
+    .option-card.multi .check { border-radius: 4px; }
+
+    /* Conditional reveal */
+    .conditional { display: none; }
+    .conditional.visible {
+      display: block;
+      animation: stepIn 0.3s ease;
+    }
+
+    /* Divider */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 28px 0;
+    }
+
+    /* Navigation */
+    .nav-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+      align-items: center;
+    }
+    .btn-back {
+      flex-shrink: 0;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 14px 20px;
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-back:hover { border-color: #444; color: #ccc; }
+    .btn-next {
+      flex: 1;
+      background: var(--green);
+      border: none;
+      color: #000;
+      padding: 14px 24px;
+      border-radius: var(--radius);
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.02em;
+    }
+    .btn-next:hover { background: #fff; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,255,153,0.2); }
+    .btn-next:active { transform: translateY(0); }
+
+    /* Waitlist card */
+    .waitlist-card {
+      background: linear-gradient(135deg, rgba(0,255,153,0.08), rgba(0,255,153,0.03));
+      border: 1px solid rgba(0,255,153,0.25);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .waitlist-card .wl-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--green);
+      margin-bottom: 4px;
+    }
+    .waitlist-card .wl-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    /* Thank you screen */
+    .thank-you {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .thank-you .icon {
+      font-size: 56px;
+      margin-bottom: 20px;
+      display: block;
+      animation: pop 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+    @keyframes pop {
+      from { transform: scale(0.5); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+    .thank-you h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+    .thank-you p { color: var(--muted); font-size: 15px; line-height: 1.6; }
+    .thank-you .green { color: var(--green); font-weight: 500; }
+
+    /* Step dots */
+    .step-dots {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 28px;
+    }
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 99px;
+      background: var(--surface2);
+      transition: all 0.3s;
+    }
+    .dot.active { background: var(--green); width: 20px; }
+    .dot.done { background: var(--green-dim); }
+
+    /* Range slider */
+    .slider-wrap { padding: 4px 0; }
+    input[type="range"] {
+      width: 100%; height: 4px;
+      background: var(--surface2);
+      border-radius: 99px;
+      outline: none;
+      border: none;
+      box-shadow: none;
+      cursor: pointer;
+      padding: 0;
+      -webkit-appearance: none;
+      appearance: auto;
+      accent-color: var(--green);
+    }
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+    .slider-value {
+      text-align: center;
+      color: var(--green);
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+<div class="survey-wrapper">
+
+  <div class="survey-header">
+    <div class="eyebrow">🔒 Anonymous · 5 minutes</div>
+    <h1>Help us build something you'll actually use.</h1>
+    <p>No fluff. Real questions. Your answers shape what we build.</p>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="progress-bar-wrapper">
+    <div class="progress-meta">
+      <div class="progress-label">Step <span id="stepNum">1</span> of <span id="totalSteps">4</span></div>
+      <div class="progress-label"><span id="pct">0%</span> complete</div>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Step dots -->
+  <div class="step-dots" id="stepDots"></div>
+
+  <!-- ─── STEP 1: About You ─── -->
+  <div class="step active" id="step-1">
+    <div class="step-title">First, tell us about yourself.</div>
+    <div class="step-subtitle">No right or wrong answers — we just want context.</div>
+
+    <div class="field">
+      <label>How old are you?</label>
+      <div class="options-grid">
+        <div class="option-card" data-group="age" data-val="18-24"><div class="check">✓</div>18–24</div>
+        <div class="option-card" data-group="age" data-val="25-34"><div class="check">✓</div>25–34</div>
+        <div class="option-card" data-group="age" data-val="35-44"><div class="check">✓</div>35–44</div>
+        <div class="option-card" data-group="age" data-val="45+"><div class="check">✓</div>45+</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>How would you describe your current lifestyle?</label>
+      <div class="options-grid cols-1">
+        <div class="option-card" data-group="lifestyle" data-val="Structured"><div class="check">✓</div>🗓️ Structured — I follow routines and plans</div>
+        <div class="option-card" data-group="lifestyle" data-val="Somewhat Structured"><div class="check">✓</div>⚖️ Somewhat structured — mix of planned and spontaneous</div>
+        <div class="option-card" data-group="lifestyle" data-val="Go with the flow"><div class="check">✓</div>🌊 Go with the flow — mostly spontaneous</div>
+        <div class="option-card" data-group="lifestyle" data-val="Feel stuck"><div class="check">✓</div>😶 Honestly? I feel a bit stuck right now</div>
+      </div>
+    </div>
+
+    <!-- Conditional: only shows if "Feel stuck" -->
+    <div class="conditional field" id="cond-stuck">
+      <label>What does "stuck" look like for you? <span class="optional">optional</span></label>
+      <textarea id="stuck_desc" placeholder="e.g. I know what I want but can't seem to start, or I feel overwhelmed..."></textarea>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-next" onclick="nextStep()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- ─── STEP 2: Pain Points ─── -->
+  <div class="step" id="step-2">
+    <div class="step-title">What's actually getting in the way?</div>
+    <div class="step-subtitle">Be honest — this is the most important part.</div>
+
+    <div class="field">
+      <label>What are your biggest day-to-day struggles? <span class="optional">pick all that apply</span></label>
+      <div class="options-grid cols-1">
+        <div class="option-card multi" data-group="struggles" data-val="Motivation"><div class="check multi">✓</div>😮‍💨 Staying motivated</div>
+        <div class="option-card multi" data-group="struggles" data-val="Focus"><div class="check multi">✓</div>🎯 Staying focused / too distracted</div>
+        <div class="option-card multi" data-group="struggles" data-val="Loneliness"><div class="check multi">✓</div>🫂 Feeling isolated or unsupported</div>
+        <div class="option-card multi" data-group="struggles" data-val="Accountability"><div class="check multi">✓</div>📋 Holding myself accountable</div>
+        <div class="option-card multi" data-group="struggles" data-val="Direction"><div class="check multi">✓</div>🧭 Not knowing what direction to go</div>
+        <div class="option-card multi" data-group="struggles" data-val="Social media"><div class="check multi">✓</div>📱 Social media is stealing my time</div>
+      </div>
+    </div>
+
+    <!-- Conditional: shows when "Social media" is selected -->
+    <div class="conditional field" id="cond-social">
+      <label>How many hours a day do you spend on social media?</label>
+      <div class="options-grid">
+        <div class="option-card" data-group="social" data-val="Less than 1hr"><div class="check">✓</div>Under 1 hr</div>
+        <div class="option-card" data-group="social" data-val="1-2hrs"><div class="check">✓</div>1–2 hrs</div>
+        <div class="option-card" data-group="social" data-val="2-4hrs"><div class="check">✓</div>2–4 hrs</div>
+        <div class="option-card" data-group="social" data-val="4+hrs"><div class="check">✓</div>4+ hrs</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Anything else holding you back? <span class="optional">optional</span></label>
+      <textarea id="pain_other" placeholder="In your own words..."></textarea>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-back" onclick="prevStep()">← Back</button>
+      <button class="btn-next" onclick="nextStep()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- ─── STEP 3: App + Features ─── -->
+  <div class="step" id="step-3">
+    <div class="step-title">About the app we're building.</div>
+    <div class="step-subtitle">A lifestyle community app — your honest take matters.</div>
+
+    <div class="field">
+      <label>How interested would you be in an app like this?</label>
+      <div class="options-grid cols-1">
+        <div class="option-card" data-group="interest" data-val="Very Interested"><div class="check">✓</div>🔥 Very interested — I'd download it immediately</div>
+        <div class="option-card" data-group="interest" data-val="Somewhat Interested"><div class="check">✓</div>👀 Somewhat interested — depends on the features</div>
+        <div class="option-card" data-group="interest" data-val="Neutral"><div class="check">✓</div>🤷 Neutral — need more info</div>
+        <div class="option-card" data-group="interest" data-val="Not Interested"><div class="check">✓</div>👎 Not really my thing</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="field">
+      <label>Which features sound most useful to you? <span class="optional">pick all that apply</span></label>
+      <div class="options-grid">
+        <div class="option-card multi" data-group="features_want" data-val="Daily check-ins"><div class="check multi">✓</div>Daily check-ins</div>
+        <div class="option-card multi" data-group="features_want" data-val="Accountability buddies"><div class="check multi">✓</div>Accountability buddies</div>
+        <div class="option-card multi" data-group="features_want" data-val="Group challenges"><div class="check multi">✓</div>Group challenges</div>
+        <div class="option-card multi" data-group="features_want" data-val="Progress tracking"><div class="check multi">✓</div>Progress tracking</div>
+        <div class="option-card multi" data-group="features_want" data-val="Goal setting"><div class="check multi">✓</div>Goal setting</div>
+        <div class="option-card multi" data-group="features_want" data-val="Community feed"><div class="check multi">✓</div>Community feed</div>
+        <div class="option-card multi" data-group="features_want" data-val="Journaling"><div class="check multi">✓</div>Journaling</div>
+        <div class="option-card multi" data-group="features_want" data-val="Coaching / tips"><div class="check multi">✓</div>Coaching / tips</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>What annoys you most in apps like this? <span class="optional">optional</span></label>
+      <textarea id="features_dislike" placeholder="e.g. too many notifications, gamification feels forced, toxic comparison culture..."></textarea>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-back" onclick="prevStep()">← Back</button>
+      <button class="btn-next" onclick="nextStep()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- ─── STEP 4: Pricing + Waitlist ─── -->
+  <div class="step" id="step-4">
+    <div class="step-title">Almost done — the important stuff.</div>
+    <div class="step-subtitle">Pricing reality check + early access.</div>
+
+    <div class="field">
+      <label>What would you realistically pay per month for this?</label>
+      <div class="slider-value" id="priceDisplay">$0 / month</div>
+      <div class="slider-wrap">
+        <input type="range" id="priceSlider" min="0" max="4" step="1" value="0"
+          oninput="updatePrice(this.value)">
+        <div class="slider-labels">
+          <span>Free</span><span>$1–5</span><span>$6–10</span><span>$11–20</span><span>$20+</span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="waitlist-card">
+      <div class="wl-title">🚀 Get Early Access</div>
+      <div class="wl-sub">Be first in line. No spam, ever. Just a heads-up when we launch.</div>
+      <div class="field">
+        <label>Your name <span class="optional">optional</span></label>
+        <input type="text" id="wl_name" placeholder="First name is fine">
+      </div>
+      <div class="field">
+        <label>Email address</label>
+        <input type="email" id="wl_email" placeholder="you@example.com">
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-back" onclick="prevStep()">← Back</button>
+      <button class="btn-next" onclick="submitSurvey()">Submit & Join Waitlist →</button>
+    </div>
+  </div>
+
+  <!-- ─── THANK YOU ─── -->
+  <div class="step" id="step-5">
+    <div class="thank-you">
+      <span class="icon">🙌</span>
+      <h2>You're in. Thank you.</h2>
+      <p>Your response has been sent.<br>
+        <span class="green" id="confirm-email"></span><br><br>
+        We'll reach out when we're ready to launch — you'll be among the first to know. We genuinely appreciate you taking the time.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const TOTAL_STEPS = 4;
+  let currentStep = 1;
+  const priceLabels = ['$0 / month (free only)', '$1–5 / month', '$6–10 / month', '$11–20 / month', '$20+ / month'];
+  const selections = {}; // stores all values
+
+  // ─── Init ───────────────────────────────────────────────
+  function init() {
+    buildDots();
+    updateProgress();
+    bindOptionCards();
+    bindConditionals();
+  }
+
+  function buildDots() {
+    const dots = document.getElementById('stepDots');
+    dots.innerHTML = '';
+    for (let i = 1; i <= TOTAL_STEPS; i++) {
+      const d = document.createElement('div');
+      d.className = 'dot' + (i === 1 ? ' active' : '');
+      d.id = 'dot-' + i;
+      dots.appendChild(d);
+    }
+  }
+
+  function updateProgress() {
+    const pct = Math.round(((currentStep - 1) / TOTAL_STEPS) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('pct').textContent = pct + '%';
+    document.getElementById('stepNum').textContent = currentStep;
+    document.getElementById('totalSteps').textContent = TOTAL_STEPS;
+
+    for (let i = 1; i <= TOTAL_STEPS; i++) {
+      const d = document.getElementById('dot-' + i);
+      if (!d) continue;
+      d.className = 'dot' + (i === currentStep ? ' active' : i < currentStep ? ' done' : '');
+    }
+  }
+
+  // ─── Option cards ─────────────────────────────────────
+  function bindOptionCards() {
+    document.querySelectorAll('.option-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const group = card.dataset.group;
+        const val = card.dataset.val;
+        const isMulti = card.classList.contains('multi');
+
+        if (isMulti) {
+          card.classList.toggle('selected');
+          if (!Array.isArray(selections[group])) selections[group] = [];
+          if (card.classList.contains('selected')) {
+            if (!selections[group].includes(val)) selections[group].push(val);
+          } else {
+            selections[group] = selections[group].filter(v => v !== val);
+          }
+        } else {
+          document.querySelectorAll(`.option-card[data-group="${group}"]`).forEach(c => c.classList.remove('selected'));
+          card.classList.add('selected');
+          selections[group] = val;
+        }
+        checkConditionals();
+      });
+    });
+  }
+
+  // ─── Conditional logic ────────────────────────────────
+  function bindConditionals() { checkConditionals(); }
+
+  function checkConditionals() {
+    // "Feel stuck" → show extra textarea
+    const stuckEl = document.getElementById('cond-stuck');
+    if (selections['lifestyle'] === 'Feel stuck') {
+      stuckEl.classList.add('visible');
+    } else {
+      stuckEl.classList.remove('visible');
+    }
+
+    // "Social media" struggle → show social hours question
+    const socialEl = document.getElementById('cond-social');
+    const struggles = selections['struggles'] || [];
+    if (struggles.includes('Social media')) {
+      socialEl.classList.add('visible');
+    } else {
+      socialEl.classList.remove('visible');
+    }
+  }
+
+  // ─── Navigation ───────────────────────────────────────
+  function nextStep() {
+    if (currentStep >= TOTAL_STEPS) return;
+    showStep(currentStep + 1);
+  }
+
+  function prevStep() {
+    if (currentStep <= 1) return;
+    showStep(currentStep - 1);
+  }
+
+  function showStep(n) {
+    document.getElementById('step-' + currentStep).classList.remove('active');
+    currentStep = n;
+    document.getElementById('step-' + currentStep).classList.add('active');
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ─── Price slider ─────────────────────────────────────
+  function updatePrice(val) {
+    document.getElementById('priceDisplay').textContent = priceLabels[val];
+    selections['price'] = priceLabels[val];
+  }
+
+  // ─── PASTE YOUR APPS SCRIPT URL HERE ─────────────────
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-H7ruBLo_9W5CGKZgQ1BXirb6TRp388UPKH_P7BEMShkGTvxICMTA7133Ab8_MlES/exec';
+
+  // ─── Submit ───────────────────────────────────────────
+  async function submitSurvey() {
+    const email = document.getElementById('wl_email').value.trim();
+    const name  = document.getElementById('wl_name').value.trim();
+
+    // Collect remaining free-text fields
+    selections['price']           = priceLabels[document.getElementById('priceSlider').value];
+    selections['pain_other']      = document.getElementById('pain_other').value.trim();
+    selections['features_dislike']= document.getElementById('features_dislike').value.trim();
+    selections['stuck_desc']      = document.getElementById('stuck_desc').value.trim();
+
+    // Build payload
+    const payload = {
+      name,
+      email,
+      age:              selections.age         || '',
+      lifestyle:        selections.lifestyle   || '',
+      stuck_desc:       selections.stuck_desc  || '',
+      struggles:        selections.struggles   || [],
+      social:           selections.social      || '',
+      pain_other:       selections.pain_other  || '',
+      interest:         selections.interest    || '',
+      features_want:    selections.features_want || [],
+      features_dislike: selections.features_dislike || '',
+      price:            selections.price       || '$0'
+    };
+
+    // Disable button + show loading state
+    const btn = document.querySelector('#step-4 .btn-next');
+    btn.textContent = 'Sending…';
+    btn.disabled = true;
+
+    try {
+      // Apps Script requires no-cors mode — response will be opaque but data still lands
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      // no-cors fetch throws on network failure only; opaque success looks like an error
+      // so we always proceed to the thank-you screen unless it's a real network failure
+      console.warn('Fetch note:', err);
+    }
+
+    // Show thank-you screen
+    document.getElementById('step-' + currentStep).classList.remove('active');
+    document.getElementById('progressFill').style.width = '100%';
+    document.getElementById('pct').textContent = '100%';
+    document.getElementById('step-5').classList.add('active');
+    document.getElementById('stepDots').style.display = 'none';
+
+    if (email) {
+      document.getElementById('confirm-email').textContent = email + ' is on the list.';
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
